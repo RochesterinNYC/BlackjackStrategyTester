@@ -1,5 +1,7 @@
 Example Test Run: 
 
+Strategy File transcribed from: http://wizardofodds.com/games/blackjack/strategy/calculator/
+
 Actual Blackjack Calculator
 Number of decks of cards used: 8
 Dealer hits or stands on a soft 17:  Stands
@@ -27,6 +29,14 @@ House Edge Result: 0.3540
 
 - Note: For test runs with low number of simulations (ex. 1000), error margins are a lot larger.
 
+- The graph of player bankroll progress helps to illustrate that even if you play with perfect 
+  strategy (house edge cannot get much lower than 0.35ish without extremely casino-unfavorable rules or card-counting),
+  you will lose money in the long run due to house edge. For perspective, most simulation runs of 10,000 rounds or so with 
+  a $5 standard bet end up with a -2.2 * 10^4 bankroll, or -$22,000 bankroll. A good Blackjack player that knows perfect 
+  strategy can play about 10 hands a minute online or at an empty table so in about 16.6 hours or maybe 2 days of 
+  consecutive play, a Blackjack player playing perfect strategy can lose $22,000.
+
+------------------------------------------------------------------------------------------------
 
 CSV Format:
 - 1 is hit, 2 is stand, 3 is split, 4 is double if possible, otherwise hit, 5 is double if possible, otherwise stand

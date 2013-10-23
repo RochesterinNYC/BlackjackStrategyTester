@@ -1,5 +1,7 @@
 function[houseEdge] = blackjackStrategyTester(dataFile, numDecks, standSoft17, doubleAfterSplit, blackjackPayout, numSimulations, standardBet)
-
+%blackjackStrategyTester method that reads in a Blackjack Strategy Chart in a specific format and runs simulations and calculates house edge and graphs play bankroll
+%parameters((dataFile, numDecks, standSoft17, doubleAfterSplit, blackjackPayout, numSimulations, standardBet)
+  
   %Create strategyTable object with strategy table csv
   strategyChart = StrategyChart(dataFile);
 
@@ -7,6 +9,10 @@ function[houseEdge] = blackjackStrategyTester(dataFile, numDecks, standSoft17, d
   decks = Decks();
   decks.setDecks(numDecks);
 
+  %Minimum recommended starting bankroll is enough to cover 50 minimum bets
+  bankRollValue = 50 * standardBet;
+  bankRollCount = [];
+  roundNumber = [];
   totalWinnings = 0;
   totalSpent = 0;
   %Iterate through each combination
@@ -15,8 +21,23 @@ function[houseEdge] = blackjackStrategyTester(dataFile, numDecks, standSoft17, d
     [roundWinnings, roundSpent] = playRound(standSoft17, doubleAfterSplit, blackjackPayout, strategyChart, decks, standardBet);
     totalWinnings = totalWinnings + roundWinnings;
     totalSpent = totalSpent + roundSpent;
+    bankRollValue = bankRollValue + roundWinnings - roundSpent;
+    bankRollCount(1, end + 1) = bankRollValue;
+    roundNumber(1, end + 1) = n;
   end
+  
+  clf;
+  figure(1);
+  plot(roundNumber, bankRollCount);
+  title('Blackjack Player Bankroll Progress');
+  xlabel('Round Number');
+  ylabel('Player Bankroll Value ($)');
+  axis([0 (max(roundNumber)+1) (min(bankRollCount) - (max(bankRollCount) - min(bankRollCount)) * 0.05) ...
+           (max(bankRollCount) + (max(bankRollCount) - min(bankRollCount)) * 0.05)]);
+  grid minor;
 
+  %House Edge is ratio of average loss to initial bet
+  %Ex. If house edge = .05%, then player expects to lose $0.05 for every $1 flat bet.
   houseEdge = -((totalWinnings - totalSpent) / totalSpent);
 end
 
