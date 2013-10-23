@@ -15,20 +15,11 @@ classdef Decks < handle
       %No input arguments is deal random card
       %One input argument is nonAce indication (varagin{1} is whether a non ace card is to be randomly dealt)
       %Two input arguments is dealing a specific value card of a random suit with varagin{2} indicating the value
-      function cardValue = dealCard(obj, varargin)
+      function cardValue = dealCard()
         validCardPicked = 0;
         while ~validCardPicked
           suit = floor(rand(1)* 4) + 1;
-          %seeking to specific value card
-          if nargin == 3
-            cardValue = varargin{2};
-          %seeking to deal nonace card
-          elseif nargin == 2 && varargin{1}
-            cardValue = floor(rand(1)* 9) + 2;
-          %seeking to deal random card
-          else
-            cardValue = floor(rand(1)* 10) + 1;
-          end
+          cardValue = floor(rand(1)* 10) + 1;
           if obj.cardsOfDeck(cardValue, suit) ~= 0
             validCardPicked = 1;
           end
