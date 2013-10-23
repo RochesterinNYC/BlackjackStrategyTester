@@ -1,12 +1,10 @@
 function[houseEdge] = blackjackStrategyTester(dataFile, numDecks, standSoft17, doubleAfterSplit, blackjackPayout, numSimulations, standardBet)
-  %import and convert strategyTable
 
-  strategyChart = generateStrategyChart(dataFile);
+  %Create strategyTable object with strategy table csv
+  strategyChart = StrategyChart(dataFile);
 
-  %create deck
-  %matrix of 10 * 4 (10, J, Q, K are all the same value)
+  %create complete deck object (matrix of 10 * 4 as 10, J, Q, K are all the same value)
   decks = Decks();
-  %creates a big deck of cards that are composed of numDecks decks
   decks.setDecks(numDecks);
 
   totalWinnings = 0;
@@ -19,8 +17,7 @@ function[houseEdge] = blackjackStrategyTester(dataFile, numDecks, standSoft17, d
     totalSpent = totalSpent + roundSpent;
   end
 
-  houseEdge = totalWinnings / totalSpent;
-
+  houseEdge = -((totalWinnings - totalSpent) / totalSpent);
 end
 
 %------------------------------------------------------------------
@@ -40,24 +37,23 @@ function[handValue] = handSum(hand)
 end
 %------------------------------------------------------------------
 %playRound Function
-%Plays a simulated round of blackjack where user has a predefined hand, action to take, and dealer has a faceup card
-%Dealer plays as normal 
-%playerWon as 0 is loses, 1 is wins, 2 is player blackjack
+%plays a round of blackjack between player and dealer and returns player winnings and loss
 function[playerWinnings, playerLoss] = playRound(standSoft17, doubleAfterSplit, blackjackPayout, strategyChart, decks, standardBet, varargin)
-
   playerLoss = standardBet;
   isDoubleRound = 0;
   isSplitRound = 0;
+  playerBusts = 0;
 
-  if nargin == 9
+  %deal out cards (deal one to player if round is a split round)
+  if nargin == 8
     %new round player has one split card so deal another
-    playerHand = [varargin{8}, decks.dealCard()];
-    dealerHand = varargin{9};
+    playerHand = [varargin{1}, decks.dealCard()];
+    dealerHand = varargin{2};
     isSplitRound = 1;
-  elseif nargin == 7
+  elseif nargin == 6
     %1st card in dealer hand is the visible, faceup one
-    dealerHand = [decks.dealCard(), decks.dealCard()];
     playerHand = [decks.dealCard(), decks.dealCard()];
+    dealerHand = [decks.dealCard(), decks.dealCard()];
   end
 
   %Both Blackjack (Tie)
@@ -81,11 +77,14 @@ function[playerWinnings, playerLoss] = playRound(standSoft17, doubleAfterSplit, 
   %Else play out
   %1 is hit, 2 is stand, 3 is split, 4 is double if possible, otherwise hit, 5 is double if possible, otherwise stand
   playerContinue = 1;
-  while playerContinue
-    action = strategyChart.getPlayerAction(playerHand, dealerHand(1), handSum(playerHand))
 
-    %is a split hand and double after split is not allowed so hit
-    if isSplit && ~doubleAfterSplit
+  %continue and decide a player action based on strategy chart if not busted yet
+  while playerContinue
+    
+    action = strategyChart.decideAction(playerHand, dealerHand(1), handSum(playerHand));
+    
+    %is a split hand and double after split is not allowed, so action is hit or stand
+    if isSplitRound && ~doubleAfterSplit
       if action == 4
         action = 1;
       elseif action == 5
@@ -98,32 +97,35 @@ function[playerWinnings, playerLoss] = playRound(standSoft17, doubleAfterSplit, 
     elseif action == 2 %stand
       playerContinue = 0;
     elseif action == 3 %split
-      
+      %set up split betting and hands      
       playerSplitHand1 = [playerHand(1)];
       playerLoss = playerLoss - standardBet;
       %splitting is as if you took back your bet and put down two bets on two separate hands
       playerSplitHand2 = [playerHand(2)];
+      %recursively play new split hands
       [splitHand1Loss, splitHand1Winnings] = playRound(standSoft17, doubleAfterSplit, blackjackPayout, ...
                                                        strategyChart, decks, standardBet, playerSplitHand1, dealerHand);
       [splitHand2Loss, splitHand2Winnings] = playRound(standSoft17, doubleAfterSplit, blackjackPayout, ...
                                                        strategyChart, decks, standardBet, playerSplitHand2, dealerHand);
-
+      %get split hand results
       playerLoss = playerLoss + splitHand1Loss + splitHand2Loss;
-      playerWinnings = playerWinnings + splitHand1Winnings + splitHand2Winnings;
-
+      playerWinnings = splitHand1Winnings + splitHand2Winnings;
+      playerContinue = 0;
     elseif action == 4 || action == 5 %double
       playerLoss = playerLoss + standardBet;
       isDoubleRound = 1;
       playerHand(1, end + 1) = decks.dealCard();
       playerContinue = 0;
     end
+
+    %check if player has busted
+    if handSum(playerHand) > 21 
+      action = 0;
+      playerBusts = 1;
+      playerContinue = 0;
+    end
   end
-
-  dealerHand = dealerPlay(dealerHand, standSoft17, decks);
   
-  dealerHandValue = handSum(dealerHand);
-  playerHandValue = handSum(playerHand);
-
   %instead of extra set of logic branches, simply add a multiplier for double
   if isDoubleRound
     doubleMultiplier = 2;
@@ -131,18 +133,37 @@ function[playerWinnings, playerLoss] = playRound(standSoft17, doubleAfterSplit, 
     doubleMultiplier = 1;
   end
 
+  %if player has busted, round ends and dealer wins
+  if playerBusts
+    playerWinnings = 0;
+    return
+  end
+  
+  %if player has not busted, dealer plays
+  dealerHand = dealerPlay(dealerHand, standSoft17, decks);
+
+  %if dealer has busted and player has not, round ends and player wins
+  if handSum(dealerHand) > 21 
+    playerWinnings = standardBet * doubleMultiplier;
+    return
+  end
+
+  dealerHandValue = handSum(dealerHand);
+  playerHandValue = handSum(playerHand);
+  
+  %if neither player nor dealer has busted, compare hand values
   if playerHandValue == dealerHandValue
     playerWinnings = standardBet * doubleMultiplier;
   elseif playerHandValue < dealerHandValue
     playerWinnings = 0;
   elseif playerHandValue > dealerHandValue
-    playerWinnings == 2 * standardBet * doubleMultiplier;  
+    playerWinnings = 2 * standardBet * doubleMultiplier;  
   end
 
 end
 %------------------------------------------------------------------
 %dealerPlay Function
-%dealer plays (depends on )
+%dealer plays his hand according to stand or not on soft 17 rules and having to hit until at least 17
 function[dealerHandValue] = dealerPlay(dealerHand, standSoft17, decks)
   %dealer has an ace and has to hit on 17
   if min(dealerHand) == 1 && ~standSoft17
