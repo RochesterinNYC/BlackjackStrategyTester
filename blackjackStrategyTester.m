@@ -39,6 +39,8 @@ function[houseEdge] = blackjackStrategyTester(dataFile, numDecks, standSoft17, d
   %House Edge is ratio of average loss to initial bet
   %Ex. If house edge = .05%, then player expects to lose $0.05 for every $1 flat bet.
   houseEdge = -((totalWinnings - totalSpent) / totalSpent);
+  fprintf('The house edge for this Blackjack strategy is %f%%.\n', houseEdge);
+  fprintf('Following this strategy, at the end of %d rounds with a bet of $%d each round, your bankroll would be -$%d.\n', numSimulations, standardBet, -round(bankRollValue));
 end
 
 %------------------------------------------------------------------
