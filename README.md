@@ -59,11 +59,11 @@ Output:
     The house edge for this Blackjack strategy is 0.3540%.
     Following this strategy, at the end of 10000 rounds with a bet of $5 each round, your bankroll would be -$21735.
 
-![Blackjack Strategy Tester Bankroll Graph](http://s3.amazonaws.com/jamesrwen/app/public/projects/blackjackstrategy/blackjackstrategygraph_original.png?1390017721 "Blackjack Strategy Tester Bankroll Graph")
+![Blackjack Strategy Tester Bankroll Graph](http://s3.amazonaws.com/jamesrwen/app/public/uploads/blackjackstrategygraph_original.png?1390771535 "Blackjack Strategy Tester Bankroll Graph")
 
 #####Error Calculation:
 
-![Blackjack Strategy Tester Error](http://s3.amazonaws.com/jamesrwen/app/public/projects/blackjackstrategy/blackjackstrategyerror_original.png?1390020487 "Blackjack Strategy Tester Error")
+![Blackjack Strategy Tester Error](http://s3.amazonaws.com/jamesrwen/app/public/uploads/blackjackstrategyerror_original.png?1390771527 "Blackjack Strategy Tester Error")
 
 #####Results:
 - Acceptable error margin.
